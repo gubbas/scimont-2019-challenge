@@ -13,8 +13,7 @@ Parameters:
     NoEcho: true
 
 Resources:
-
-ImageModeratorAPI:
+  ImageModeratorAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
@@ -51,6 +50,7 @@ ImageModeratorAPI:
             type: "object"
             title: "Empty Schema"
 
+
   ImageModeratorFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -70,13 +70,13 @@ ImageModeratorAPI:
             Path: /
             Method: post
             RestApiId: !Ref ImageModeratorAPI
-      Policies: 
+      Policies:
       - RekognitionLabelsPolicy: {}
 
 
 
 Outputs:
   RequestURL:
-    Description: Prod URL for API to use as Request URL for Twitter  app
+    Description: Prod URL for API to use as Request URL for Slack app
     Value: !Sub |-
        https://${ImageModeratorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/

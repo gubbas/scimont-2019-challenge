@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  RequestURL:
+    Description: Prod URL for API to use as Request URL for Slack app
+    Value:
+      Fn::Sub: https://${ImageModeratorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+Parameters:
+  AccessToken:
+    Description: OAuth access token from Slack app settings
+    NoEcho: true
+    Type: String
+  VerificationToken:
+    Description: Verification token from Slack app settings
+    NoEcho: true
+    Type: String
+Resources:
+  ImageModeratorAPI:
+    Properties:
+      DefinitionBody:
+        basePath: /Prod
+        definitions:
+          Empty:
+            title: Empty Schema
+            type: object
+        info:
+          title:
+            Ref: AWS::StackName
+          version: '2017-06-11T02:20:25Z'
+        paths:
+          /:
+            post:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                contentHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                responses:
+                  default:
+                    statusCode: '200'
+                type: aws
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ImageModeratorFunction.Arn}/invocations
+        schemes:
+        - https
+        swagger: '2.0'
+      StageName: Prod
+    Type: AWS::Serverless::Api
+  ImageModeratorFunction:
+    Properties:
+      CodeUri: s3://mystacks/013fdf42097e1561e904e4c00b677904
+      Description: Inspects Slack message.channels events for images with explicit
+        content and removes the offending images if found
+      Environment:
+        Variables:
+          ACCESS_TOKEN:
+            Ref: AccessToken
+          MIN_CONFIDENCE: 80
+          VERIFICATION_TOKEN:
+            Ref: VerificationToken
+      Events:
+        ImageModeratorAPIPost:
+          Properties:
+            Method: post
+            Path: /
+            RestApiId:
+              Ref: ImageModeratorAPI
+          Type: Api
+      Handler: process_tweets.lambda_handler
+      Policies:
+      - RekognitionLabelsPolicy: {}
+      Runtime: python3.6
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

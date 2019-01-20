@@ -35,20 +35,30 @@ First make sure you're logged in to Slack, then follow these instructions to pre
 1. Click `Install App to Team` then `Authorize` then note the `OAuth Access Token` as it will be required later
 
 ### Launching the Processing Backend on AWS
+#### STEP 0 : Prep steps
+1. Install AWS CLI on local machine
 
-#### Option 1: Launch from Serverless Application Repository
-This bot can be launched into any region that supports the underlying services from the [Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/) using the instructions below:
 
-1. Navigate to the [application details page](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:426111819794:applications~image-moderation-chatbot) for the chatbot.
-1. Click `Deploy`
-1. From the region dropdown in the top right ensure you have the desired region to deploy into selected
-1. Input the appropriate application parameters under `Configure application parameters`
-1. Scroll to the bottom of the page and click `Deploy` to deploy the chatbot
+#### STEP 1 : Login to AWS to run AWS CLI.
+Get `AWS Access Key ID` and `Secret Key`. 
+from terminal window
+```` bash
+aws configure
+````
+then pass access and secret keys, select region and format as defaults
 
-#### Option 2: Launch the CloudFormation Template Manually 
-If you would like to deploy the template manually, you need a S3 bucket in the target region, and then package the Lambda functions into that S3 bucket by using the `aws cloudformation package` utility.
+after login create a bucket to stage cloudformation templates
+
+```` bash
+aws s3api create-bucket --bucket mystacks --region us-east-1
+````
+
+#### STEP 2: Launch the CloudFormation Template Manually 
+If you would like to deploy the template manually, you need a S3 bucket in the target region, 
+and then package the Lambda functions into that S3 bucket by using the `aws cloudformation package` utility.
 
 Set environment variables for later commands to use:
+Update `setenv.sh` with appropriate values
 
 ```bash
 S3BUCKET=[REPLACE_WITH_YOUR_BUCKET]
@@ -58,16 +68,21 @@ VTOKEN=[REPLACE_WITH_VERIFICATION_TOKEN]
 ATOKEN=[REPLACE_WITH_OAUTH_ACCESS_TOKEN]
 ```
 
+the run 
+```bash
+source ./setenv.sh
+```
+
 Then go to the `cloudformation` folder and use the `aws cloudformation package` utility
 
 ```bash
 cd cloudformation
 
-aws cloudformation package --region $REGION --s3-bucket $S3BUCKET --template image_moderator.serverless.yaml --output-template-file image_moderator.output.yaml
+aws cloudformation package --region $REGION --s3-bucket $S3BUCKET --template twitter_feed_processor.serverless.yaml --output-template-file twitter_feed_processor.output.yaml
 ```
 Last, deploy the stack with the resulting yaml (`image_moderator.output.yaml`) through the CloudFormation Console or command line:
 
 ```bash
-aws cloudformation deploy --region $REGION --template-file image_moderator.output.yaml --stack-name $STACKNAME --capabilities CAPABILITY_NAMED_IAM --parameter-overrides VerificationToken=$VTOKEN AccessToken=$ATOKEN
+aws cloudformation deploy --region $REGION --template-file twitter_feed_processor.output.yaml --stack-name $STACKNAME --capabilities CAPABILITY_NAMED_IAM --parameter-overrides VerificationToken=$VTOKEN AccessToken=$ATOKEN
 ```
 
