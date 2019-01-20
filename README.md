@@ -1,5 +1,5 @@
 
-# Science Montgory 2019 - Aditi and Om  Architecture: Image Moderation Chatbot
+# Science Montgomery 2019 - Aditi and Om  Architecture: Real time sentiment analysis of twitter feed to under stand emotional state
 
 This project is meant to process the tweets in real time for sentiment analysis
 
