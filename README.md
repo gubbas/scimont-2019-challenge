@@ -86,3 +86,4 @@ Last, deploy the stack with the resulting yaml (`image_moderator.output.yaml`) t
 aws cloudformation deploy --region $REGION --template-file twitter_feed_processor.output.yaml --stack-name $STACKNAME --capabilities CAPABILITY_NAMED_IAM --parameter-overrides VerificationToken=$VTOKEN AccessToken=$ATOKEN
 ```
 
+Repeat build and deploy steps when ever there is change in the code
