@@ -13,7 +13,8 @@ Parameters:
     NoEcho: true
 
 Resources:
-  ImageModeratorAPI:
+
+ImageModeratorAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
@@ -50,12 +51,11 @@ Resources:
             type: "object"
             title: "Empty Schema"
 
-
   ImageModeratorFunction:
     Type: AWS::Serverless::Function
     Properties:
       Description: Inspects Slack message.channels events for images with explicit content and removes the offending images if found
-      Handler: moderate_image.lambda_handler
+      Handler: process_tweets.lambda_handler
       Runtime: python3.6
       CodeUri: ../lambda_functions/
       Environment:
@@ -77,6 +77,6 @@ Resources:
 
 Outputs:
   RequestURL:
-    Description: Prod URL for API to use as Request URL for Slack app
+    Description: Prod URL for API to use as Request URL for Twitter  app
     Value: !Sub |-
        https://${ImageModeratorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
