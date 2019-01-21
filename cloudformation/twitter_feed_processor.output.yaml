@@ -1,20 +1,167 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Outputs:
-  RequestURL:
-    Description: Prod URL for API to use as Request URL for Slack app
+  LambdaFunctionConsoleURL:
+    Description: URL to the Lambda Function console
     Value:
-      Fn::Sub: https://${ImageModeratorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+      Fn::Join:
+      - ''
+      - - https://console.aws.amazon.com/lambda/home?region=
+        - Ref: AWS::Region
+        - '#/functions/'
+        - Ref: TweetsProcessor
+        - ?tab=graph
+  RequestURL:
+    Description: Prod URL for API to use as Request URL for Tweeter app
+    Value:
+      Fn::Sub: https://${TweetsProcessorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
 Parameters:
   AccessToken:
     Description: OAuth access token from Slack app settings
     NoEcho: true
+    Type: String
+  ApplicationName:
+    Default: Science-Montgomery-2019
+    Description: Name of the application deploying for the Twitter Feed Processor
     Type: String
   VerificationToken:
     Description: Verification token from Slack app settings
     NoEcho: true
     Type: String
 Resources:
-  ImageModeratorAPI:
+  EntitiesFirehoseStream:
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN:
+          Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: TweetsBucket
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        CompressionFormat: UNCOMPRESSED
+        Prefix: entities/
+        RoleARN:
+          Fn::GetAtt:
+          - IngestionFirehoseRole
+          - Arn
+    Type: AWS::KinesisFirehose::DeliveryStream
+  IngestionFirehosePolicy:
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:AbortMultipartUpload
+          - s3:GetBucketLocation
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:ListBucketMultipartUploads
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: TweetsBucket
+          - Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: TweetsBucket
+              - /*
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          - logs:DescribeLogStreams
+          Effect: Allow
+          Resource:
+          - arn:aws:logs:*:*:*
+        Version: 2012-10-17
+      PolicyName: TweetIngestionFirehosePolicy
+      Roles:
+      - Ref: IngestionFirehoseRole
+    Type: AWS::IAM::Policy
+  IngestionFirehoseRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: AWS::AccountId
+          Effect: Allow
+          Principal:
+            Service: firehose.amazonaws.com
+        Version: 2012-10-17
+    Type: AWS::IAM::Role
+  IngestionFirehoseStream:
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN:
+          Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: TweetsBucket
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        CompressionFormat: UNCOMPRESSED
+        Prefix: raw/
+        RoleARN:
+          Fn::GetAtt:
+          - IngestionFirehoseRole
+          - Arn
+    Type: AWS::KinesisFirehose::DeliveryStream
+  SentimentFirehoseStream:
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN:
+          Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: TweetsBucket
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        CompressionFormat: UNCOMPRESSED
+        Prefix: sentiment/
+        RoleARN:
+          Fn::GetAtt:
+          - IngestionFirehoseRole
+          - Arn
+    Type: AWS::KinesisFirehose::DeliveryStream
+  TweetsBucket:
+    Type: AWS::S3::Bucket
+  TweetsProcessor:
+    Properties:
+      CodeUri: s3://mystacks/e76f7876fe95ac82d507a15f237a000b
+      Description: Process Raw Tweets for sentiment analysis
+      Environment:
+        Variables:
+          ACCESS_TOKEN:
+            Ref: AccessToken
+          MIN_CONFIDENCE: 80
+          VERIFICATION_TOKEN:
+            Ref: VerificationToken
+      Events:
+        ImageModeratorAPIPost:
+          Properties:
+            Method: post
+            Path: /
+            RestApiId:
+              Ref: TweetsProcessorAPI
+          Type: Api
+      Handler: process_tweets.lambda_handler
+      Policies:
+      - RekognitionLabelsPolicy: {}
+      Role:
+        Fn::GetAtt:
+        - TweetsProcessorRole
+        - Arn
+      Runtime: python3.6
+    Type: AWS::Serverless::Function
+  TweetsProcessorAPI:
     Properties:
       DefinitionBody:
         basePath: /Prod
@@ -45,35 +192,74 @@ Resources:
                     statusCode: '200'
                 type: aws
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ImageModeratorFunction.Arn}/invocations
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TweetsProcessor.Arn}/invocations
         schemes:
         - https
         swagger: '2.0'
       StageName: Prod
     Type: AWS::Serverless::Api
-  ImageModeratorFunction:
+  TweetsProcessorRole:
     Properties:
-      CodeUri: s3://mystacks/013fdf42097e1561e904e4c00b677904
-      Description: Inspects Slack message.channels events for images with explicit
-        content and removes the offending images if found
-      Environment:
-        Variables:
-          ACCESS_TOKEN:
-            Ref: AccessToken
-          MIN_CONFIDENCE: 80
-          VERIFICATION_TOKEN:
-            Ref: VerificationToken
-      Events:
-        ImageModeratorAPIPost:
-          Properties:
-            Method: post
-            Path: /
-            RestApiId:
-              Ref: ImageModeratorAPI
-          Type: Api
-      Handler: process_tweets.lambda_handler
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
       Policies:
-      - RekognitionLabelsPolicy: {}
-      Runtime: python3.6
-    Type: AWS::Serverless::Function
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource: arn:aws:logs:*:*:*
+            Sid: CloudWatchAccess
+          - Action:
+            - s3:GetObject
+            - s3:PutObject
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - TweetsBucket
+              - Arn
+            - Fn::Join:
+              - ''
+              - - Fn::GetAtt:
+                  - TweetsBucket
+                  - Arn
+                - /*
+            Sid: S3Access
+          - Action:
+            - firehose:ListDeliveryStreams
+            - firehose:PutRecord
+            - firehose:PutRecordBatch
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - SentimentFirehoseStream
+              - Arn
+            - Fn::GetAtt:
+              - EntitiesFirehoseStream
+              - Arn
+            Sid: FirehoseAccess
+          - Action:
+            - comprehend:DetectEntities
+            - comprehend:DetectSentiment
+            Effect: Allow
+            Resource: '*'
+            Sid: ComprehendAccess
+          - Action:
+            - translate:TranslateText
+            Effect: Allow
+            Resource: '*'
+            Sid: TranslateAccess
+          Version: '2012-10-17'
+        PolicyName: TweetsProcessorLambdaFuntionExecutionPolicy
+    Type: AWS::IAM::Role
 Transform: AWS::Serverless-2016-10-31

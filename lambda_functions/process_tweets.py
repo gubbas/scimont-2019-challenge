@@ -5,7 +5,7 @@ import boto3
 
 s3 = boto3.client('s3')
 
-print('This is process_tweets lamda function START. Updated Code Third Time')
+print('Processing Tweets START')
 
 print('S3 Object : ',s3)
 

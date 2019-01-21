@@ -66,6 +66,14 @@ Resources:
   TweetsBucket:
     Type: AWS::S3::Bucket
 
+#  PermissionForS3ToInvokeTweetsProcessorLambda:
+#      Type: 'AWS::Lambda::Permission'
+#      Properties:
+#        Action: 'lambda:InvokeFunction'
+#        FunctionName: !GetAtt TweetsProcessor.Arn
+#        Principal: 's3.amazonaws.com'
+#        SourceArn: !GetAtt TweetsBucket.Arn
+
 
 #  Comments: >
 #    Here are Kinesis Firehose stream definiations !
