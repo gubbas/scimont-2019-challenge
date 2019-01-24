@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export S3BUCKET="mystacks"
 export REGION="us-east-1"
-export STACKNAME="mystack-1"
+export STACKNAME="mystack-2"
 export VTOKEN="NOTAPPLICABLE"
 export ATOKEN="NOTAPPLICABLE"
 

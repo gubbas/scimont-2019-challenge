@@ -14,6 +14,40 @@ Outputs:
     Description: Prod URL for API to use as Request URL for Tweeter app
     Value:
       Fn::Sub: https://${TweetsProcessorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  S3ConsoleURL:
+    Description: URL to the Lambda Function console
+    Value:
+      Fn::Join:
+      - ''
+      - - https://s3.console.aws.amazon.com/s3/buckets/
+        - Ref: TweetsBucket
+        - /?region=
+        - Ref: AWS::Region
+        - '&tab=overview'
+  TwitterEntitiesLocation:
+    Description: S3 Twitter Entities location.
+    Value:
+      Fn::Join:
+      - ''
+      - - s3://
+        - Ref: TweetsBucket
+        - /entities/
+  TwitterRawLocation:
+    Description: S3 Twitter Raw location.
+    Value:
+      Fn::Join:
+      - ''
+      - - s3://
+        - Ref: TweetsBucket
+        - /raw/
+  TwitterSentimentLocation:
+    Description: S3 Twitter Sentiment location.
+    Value:
+      Fn::Join:
+      - ''
+      - - s3://
+        - Ref: TweetsBucket
+        - /sentiment/
 Parameters:
   AccessToken:
     Description: OAuth access token from Slack app settings
@@ -113,6 +147,19 @@ Resources:
           - IngestionFirehoseRole
           - Arn
     Type: AWS::KinesisFirehose::DeliveryStream
+  PermissionForS3ToInvokeMyLambda:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - TweetsProcessor
+        - Arn
+      Principal: s3.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - TweetsBucket
+        - Arn
+    Type: AWS::Lambda::Permission
   SentimentFirehoseStream:
     Properties:
       ExtendedS3DestinationConfiguration:
@@ -145,7 +192,7 @@ Resources:
           VERIFICATION_TOKEN:
             Ref: VerificationToken
       Events:
-        ImageModeratorAPIPost:
+        TweetsProcessorAPIPost:
           Properties:
             Method: post
             Path: /

@@ -65,6 +65,8 @@ Resources:
 
   TweetsBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 'tweets-bucket'
 
 #  PermissionForS3ToInvokeTweetsProcessorLambda:
 #      Type: 'AWS::Lambda::Permission'
@@ -254,6 +256,8 @@ Resources:
           VERIFICATION_TOKEN: !Ref VerificationToken
           ACCESS_TOKEN: !Ref AccessToken
           MIN_CONFIDENCE: 80
+#          SENTIMENT_STREAM: !Ref SentimentFirehoseStream
+#          ENTITY_STREAM: !Ref EntitiesFirehoseStream
       Events:
         ImageModeratorAPIPost:
           Type: Api
@@ -279,18 +283,18 @@ Outputs:
     Description: URL to the Lambda Function console
     Value: !Join ['', ['https://console.aws.amazon.com/lambda/home?region=', !Ref "AWS::Region", '#/functions/', !Ref "TweetsProcessor", '?tab=graph']]
 
-#  S3ConsoleURL:
-#    Description: URL to the Lambda Function console
-#    Value: !Join ['', ['https://s3.console.aws.amazon.com/s3/buckets/', !Ref 'TweetsBucket', '/?region=', !Ref "AWS::Region", '&tab=overview']]
+  S3ConsoleURL:
+    Description: URL to the Lambda Function console
+    Value: !Join ['', ['https://s3.console.aws.amazon.com/s3/buckets/', !Ref 'TweetsBucket', '/?region=', !Ref "AWS::Region", '&tab=overview']]
 
-#  TwitterRawLocation:
-#    Description: S3 Twitter Raw location.
-#    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /raw/]]
+  TwitterRawLocation:
+    Description: S3 Twitter Raw location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /raw/]]
 
-#  TwitterEntitiesLocation:
-#    Description: S3 Twitter Entities location.
-#    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /entities/]]
+  TwitterEntitiesLocation:
+    Description: S3 Twitter Entities location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /entities/]]
 
-#  TwitterSentimentLocation:
-#    Description: S3 Twitter Sentiment location.
-#    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /sentiment/]]
+  TwitterSentimentLocation:
+    Description: S3 Twitter Sentiment location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /sentiment/]]
