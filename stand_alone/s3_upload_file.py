@@ -29,10 +29,11 @@ class ProgressPercentage(object):
 s3 = boto3.client('s3')
 
 BUCKET_NAME = 'sm2019-social-media' # replace with your bucket name
-KEY = 'raw/cnn_post_9.txt' # replace with your object key
-
+KEY = 'raw/cnn_post_7.txt' # replace with your object key
+FILE_NAME='test_tweet_content.txt'
+#FILE_NAME='../test_data/test_tweet_content.txt'
 
 # Upload tmp.txt to bucket-name at key-name
 s3.upload_file(
-    "cnn_post_6.txt", BUCKET_NAME, KEY,
-    Callback=ProgressPercentage("cnn_post_6.txt"))
+    FILE_NAME, BUCKET_NAME, KEY,
+    Callback=ProgressPercentage(FILE_NAME))

@@ -8,7 +8,7 @@ s3 = boto3.resource('s3')
 
 try:
     print('downloading ',KEY)
-    s3.Bucket(BUCKET_NAME).download_file(KEY, 'cnn_post_6.txt')  # downloads to in same dir as script
+    s3.Bucket(BUCKET_NAME).download_file(KEY, 'cnn_post_6_downloaded.txt')  # downloads to in same dir as script
 except botocore.exceptions.ClientError as e:
     if e.response['Error']['Code'] == "404":
         print("The object does not exist.")
