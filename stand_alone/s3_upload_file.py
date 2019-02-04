@@ -29,7 +29,7 @@ class ProgressPercentage(object):
 s3 = boto3.client('s3')
 
 BUCKET_NAME = 'sm2019-social-media' # replace with your bucket name
-KEY = 'raw/cnn_post_7.txt' # replace with your object key
+KEY = 'raw/cnn_post_8.txt' # replace with your object key
 FILE_NAME='test_tweet_content.txt'
 #FILE_NAME='../test_data/test_tweet_content.txt'
 

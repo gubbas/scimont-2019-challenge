@@ -9,11 +9,13 @@ comprehend = boto3.client(service_name='comprehend')
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
+    print("Process TWEETS LAMDA STARTING : " + json.dumps(event, indent=2))
 
     # Get the object from the event and show its content type
     bucket = event['Records'][0]['s3']['bucket']['name']
-    key = urllib.unquote_plus(event['Records'][0]['s3']['object']['key'].encode('utf8'))
+    #key = urllib.unquote_plus(event['Records'][0]['s3']['object']['key'].encode('utf8'))
+    key=event['Records'][0]['s3']['object']['key']
+    # key='raw/cnn_post_8.txt'
 
     print('BUCKET NAME:',bucket)
     print('KEY:',key)

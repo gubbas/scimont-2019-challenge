@@ -182,7 +182,7 @@ Resources:
     Type: AWS::S3::Bucket
   TweetsProcessor:
     Properties:
-      CodeUri: s3://mystacks/b0d1ab49941fe14e58dda6a37a6f0326
+      CodeUri: s3://mystacks/0da47311523fcb206bdb168cde89814d
       Description: Process Raw Tweets for sentiment analysis
       Environment:
         Variables:
