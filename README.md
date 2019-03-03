@@ -29,11 +29,18 @@ The architure of the implementation was inspired by
 
 
 #### STEP 1 : Login to AWS to run AWS CLI.
-Get `AWS Access Key ID` and `Secret Key`. 
-from terminal window
+Check if it is already configured from terminal window
+```` bash
+cat ~/.aws/credentials
+cat ~/.aws/config
+````
+else configure get `AWS Access Key ID` and `Secret Key`. 
+run below commands from terminal window
+
 ```` bash
 aws configure
 ````
+
 then pass access and secret keys, select region and format as defaults
 
 after login create a bucket to stage cloudformation templates
